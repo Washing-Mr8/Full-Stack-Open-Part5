@@ -3,6 +3,9 @@ import Blog from './components/Blog'
 import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
+import LoginForm from './components/LoginForm'
+import Togglable from './components/Togglable'
+import BlogForm from './components/BlogForm'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -10,10 +13,6 @@ const App = () => {
   const [password, setPassword] = useState('')
   const [notification, setNotification] = useState({ message: null })
   const [user, setUser] = useState(null)
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [url, setUrl] = useState('')
-
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -67,84 +66,43 @@ const App = () => {
   }
 
   const loginForm = () => (
-    <form onSubmit={handleLogin}>
-      <div>
-        username
-        <input
-          type="text"
-          value={username}
-          name="Username"
-          onChange={({ target }) => setUsername(target.value)}
-        />
-      </div>
-      <div>
-        password
-        <input
-          type="password"
-          value={password}
-          name="Password"
-          onChange={({ target }) => setPassword(target.value)}
-        />
-      </div>
-      <button type="submit">login</button>
-    </form>
+    <Togglable buttonLabel="Login">
+      <LoginForm
+        username={username}
+        password={password}
+        handleLogin={handleLogin}
+        handleUsernameChange={({ target }) => setUsername(target.value)}
+        handlePasswordChange={({ target }) => setPassword(target.value)}
+      />
+    </Togglable>
   )
 
-  const blogForm = () => (
-    <form onSubmit={createBlog}>
-      <div>
-        Title
-        <input
-          type="text"
-          value={title}
-          name="title"
-          onChange={({ target }) => setTitle(target.value)}
-        />
-      </div>
-      <div>
-        Author
-        <input
-          type="text"
-          value={author}
-          name="author"
-          onChange={({ target }) => setAuthor(target.value)}
-        />
-      </div>
-      <div>
-        Url
-        <input
-          type="text"
-          value={url}
-          name="url"
-          onChange={({ target }) => setUrl(target.value)}
-        />
-      </div>
-      <button type="submit">Create</button>
-    </form>
-  )
 
-  const createBlog = async (event) => {
-    event.preventDefault()
+  const createBlog = async (blogObject) => {
     try {
-      const newBlog = {
-        title,
-        author,
-        url
-      }
-      const addedBlog = await blogService.create(newBlog)
+
+      const addedBlog = await blogService.create(blogObject)
       console.log(addedBlog)
       setBlogs(blogs.concat(addedBlog))
-      notifyWith(`A new blog ${title} by ${author} added`)
+      notifyWith(`A new blog ${blogObject.title} by ${blogObject.author} added`)
     } catch (exception) {
       console.log(exception)
       notifyWith(`Could't create blog: ${exception.message}`, true)
     }
-    finally {
-      setAuthor('')
-      setTitle('')
-      setUrl('')
-    }
   }
+
+  const updateBlog = (updatedBlog) => {
+    setBlogs(blogs.map(blog =>
+      blog.id === updatedBlog.id ? updatedBlog : blog
+    ))
+  }
+
+  const deleteBlog = (blogId) => {
+    setBlogs(blogs.filter(blog => blog.id !== blogId))
+    notifyWith('Blog deleted successfully')
+  }
+
+  const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes)
 
   return (
     <div>
@@ -156,10 +114,12 @@ const App = () => {
         <div>
           <p>{user.name} logged-in <button onClick={handleLogout}> Logout </button></p>
           <h2>Create new</h2>
-          {blogForm()}
+          <Togglable buttonLabel="New Blog">
+            <BlogForm createBlog={createBlog} />
+          </Togglable>
           <h2>Blogs</h2>
-          {blogs.map(blog =>
-            <Blog key={blog.id} blog={blog} />
+          {sortedBlogs.map(blog =>
+            <Blog key={blog.id} blog={blog} updateBlog={updateBlog} user={user} onBlogDelete={deleteBlog} />
           )}
         </div>
       }
