@@ -38,9 +38,9 @@ const Blog = ({ blog, updateBlog, user, onBlogDelete }) => {
 
   const isBlogCreator = () => {
     if (!user || !blog.user) return false
-    // console.log(user)
-    // console.log(blog.user)
-    return user.id === blog.user.id
+    // blog.user puede ser un objeto o un string (id)
+    const blogUserId = typeof blog.user === 'string' ? blog.user : blog.user.id || blog.user._id
+    return user.id === blogUserId
   }
 
   const blogStyle = {
@@ -53,14 +53,14 @@ const Blog = ({ blog, updateBlog, user, onBlogDelete }) => {
 
   return (
     <div style={blogStyle}>
-      <div style={hideWhenVisible}>
+      <div style={hideWhenVisible} className="blog-preview">
         {blog.title} <button onClick={toggleVisibility}>View</button>
       </div>
-      <div style={showWhenVisible}>
+      <div style={showWhenVisible} className="blog-details">
         {blog.title} <button onClick={toggleVisibility}>Hide</button>
-        <div>{blog.url}</div>
-        <div>Likes: {blog.likes} <button onClick={handleLike}>like</button></div>
-        <div>{blog.author}</div>
+        <div className="blog-url">{blog.url}</div>
+        <div className="blog-likes">Likes: {blog.likes} <button onClick={handleLike}>like</button></div>
+        <div className="blog-author">{blog.author}</div>
         {isBlogCreator() && (
           <div>
             <button onClick={handleDelete}>

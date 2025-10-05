@@ -62,7 +62,7 @@ const App = () => {
     event.preventDefault()
     notifyWith(`User (${user.name}) logout successfully`)
     window.localStorage.removeItem('loggedBlogappUser')
-
+    setUser(null)
   }
 
   const loginForm = () => (
